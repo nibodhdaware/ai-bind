@@ -129,7 +129,7 @@
     </head>
     <body
         data-ai-binder-prompt="You are a helpful assistant. Always respond in a single sentence. Keep it concise and professional."
-        data-ai-binder-model="gemini-1.0-pro"
+        data-ai-binder-model="gemini-2.0-flash"
     >
         <h1>AiBinder Demo</h1>
 
@@ -205,6 +205,9 @@
                         onchange="updateModel()"
                     >
                         <!-- Gemini Models -->
+                        <option value="gemini-2.0-flash" data-provider="gemini">
+                            Gemini 2.0 Flash
+                        </option>
                         <option value="gemini-1.0-pro" data-provider="gemini">
                             Gemini 1.0 Pro
                         </option>
@@ -222,9 +225,6 @@
                             data-provider="gemini"
                         >
                             Gemini 1.5 Pro Vision
-                        </option>
-                        <option value="gemini-1.5-flash" data-provider="gemini">
-                            Gemini 1.5 Flash
                         </option>
                         <!-- OpenAI Models -->
                         <option value="gpt-4" data-provider="openai">
@@ -331,14 +331,14 @@
             <span id="cooldownTimer" class="cooldown-timer"></span>
         </div>
 
-        <script src="https://cdn.jsdelivr.net/gh/<username>/<repo>@<version>/dist/ai-binder.min.js"></script>
+        <script src="dist/ai-binder.min.js"></script>
         <script>
             // Configuration
             window.AiBinderConfig = {
                 apiKey: "AIzaSyC2AjoVFamGYltppQJU_0iBoPV42-kUL_w",
                 systemPrompt:
                     "You are a helpful assistant. Always respond in a single sentence. Keep it concise and professional.",
-                model: "gemini-1.0-pro",
+                model: "gemini-2.0-flash",
                 provider: "gemini",
             };
 
@@ -451,7 +451,9 @@
                 const newApiKey = apiKeyInput.value.trim();
 
                 if (newApiKey) {
+                    // Update the configuration
                     window.AiBinderConfig.apiKey = newApiKey;
+
                     // Update the body attribute
                     document.body.setAttribute(
                         "data-ai-binder-api-key",
@@ -466,6 +468,8 @@
 
                     // Clear the input field
                     apiKeyInput.value = "";
+
+                    console.log("API key updated:", newApiKey);
                 }
             }
 
@@ -509,6 +513,8 @@
                     selectedProvider.charAt(0).toUpperCase() +
                     selectedProvider.slice(1)
                 } API key`;
+
+                console.log("Provider updated:", selectedProvider);
             }
 
             // Function to update model
@@ -530,6 +536,8 @@
 
                 // Reprocess all prompts with the new model
                 processAllPrompts(initialContext);
+
+                console.log("Model updated:", selectedModel);
             }
 
             // Initialize provider selection

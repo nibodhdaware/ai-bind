@@ -132,6 +132,14 @@ function init(apiKey, systemPrompt, model, provider) {
     const finalProvider =
         provider || bodyProvider || configProvider || "gemini";
 
+    // Log the configuration for debugging
+    console.log("Configuration:", {
+        apiKey: finalApiKey,
+        prompt: finalPrompt,
+        model: finalModel,
+        provider: finalProvider,
+    });
+
     if (!finalApiKey) {
         throw new Error(
             "API key is required. Please provide it through one of the configuration methods.",
@@ -144,7 +152,23 @@ function init(apiKey, systemPrompt, model, provider) {
         );
     }
 
-    return new AiBinder(finalApiKey, finalPrompt, finalModel, finalProvider);
+    // Create a new instance with the final configuration
+    const binder = new AiBinder(
+        finalApiKey,
+        finalPrompt,
+        finalModel,
+        finalProvider,
+    );
+
+    // Store the configuration for future reference
+    binder.config = {
+        apiKey: finalApiKey,
+        systemPrompt: finalPrompt,
+        model: finalModel,
+        provider: finalProvider,
+    };
+
+    return binder;
 }
 
 // Export the init function

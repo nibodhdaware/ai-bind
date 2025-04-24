@@ -1,30 +1,25 @@
-import terser from "@rollup/plugin-terser";
 import resolve from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
-import replace from "@rollup/plugin-replace";
-import dotenv from "dotenv";
-
-// Load environment variables
-dotenv.config();
+import terser from "@rollup/plugin-terser";
 
 export default {
-    input: "src/index.js",
+    input: "src/ai-binder.js",
     output: {
         file: "dist/ai-binder.min.js",
         format: "iife",
         name: "AiBinder",
+        sourcemap: true,
+        banner: "/*! AiBinder v1.0.0 | MIT License */",
+        footer: "//# sourceMappingURL=ai-binder.min.js.map",
     },
     plugins: [
-        replace({
-            "process.env.GEMINI_API_KEY": JSON.stringify(
-                process.env.GEMINI_API_KEY,
-            ),
-            preventAssignment: true,
-        }),
-        resolve({
-            browser: true,
-        }),
+        resolve(),
         commonjs(),
-        terser(),
+        terser({
+            format: {
+                comments: false,
+                preamble: "/*! AiBinder v1.0.0 | MIT License */",
+            },
+        }),
     ],
 };
