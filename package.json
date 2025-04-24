@@ -1,6 +1,6 @@
 {
     "name": "ai-bind",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "A library for binding AI models to HTML elements",
     "type": "module",
     "main": "dist/ai-binder.min.js",
@@ -33,5 +33,6 @@
     ],
     "browser": {
         "./dist/ai-binder.min.js": "./dist/ai-binder.min.js"
-    }
+    },
+    "jsdelivr": "dist/ai-binder.min.js"
 }
