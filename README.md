@@ -10,6 +10,80 @@ A lightweight JavaScript library that makes it easy to bind AI models to HTML el
 -   🎯 Context-aware prompts
 -   ⚡ Lightweight and fast
 
+## Installation
+
+### Option 1: CDN
+
+```html
+<script src="https://cdn.jsdelivr.net/gh/nibodhdaware/ai-bind@main/dist/ai-binder.min.js"></script>
+```
+
+### Option 2: NPM
+
+```bash
+npm install ai-bind
+```
+
+## Usage
+
+### CDN Usage
+
+```html
+<script>
+    window.AiBinderConfig = {
+        apiKey: "YOUR_API_KEY", // Required
+        provider: "gemini", // Optional: "gemini" (default), "openai", "anthropic"
+        model: "gemini-2.0-flash", // Optional: model name based on provider
+        systemPrompt: "You are a helpful assistant.", // Optional: system prompt
+    };
+</script>
+
+<p data-prompt="Generate a welcome message for {name} who is a {role}.">
+    Loading...
+</p>
+
+<script>
+    const binder = AiBinder.init();
+    const context = { name: "John", role: "developer" };
+    const elements = document.querySelectorAll("[data-prompt]");
+    elements.forEach((element) => {
+        binder.bind(context).process(element);
+    });
+</script>
+```
+
+### NPM Usage
+
+```javascript
+import { AiBinder } from "ai-bind";
+
+// Initialize the binder
+const binder = new AiBinder({
+    apiKey: "YOUR_API_KEY",
+    model: "gemini-2.0-flash",
+    systemPrompt: "You are a helpful assistant.",
+});
+
+// Process elements
+const context = { name: "John", role: "developer" };
+const elements = document.querySelectorAll("[data-prompt]");
+elements.forEach((element) => {
+    binder.bind(context).process(element);
+});
+```
+
+### ESM Usage
+
+```javascript
+import { AiBinder } from "ai-bind/dist/ai-binder.esm.js";
+```
+
+### CommonJS Usage
+
+```javascript
+const { AiBinder } = require("ai-bind/dist/ai-binder.cjs.js");
+```
+
 ## Quick Start
 
 ### 1. Include the Library
