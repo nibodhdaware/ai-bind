@@ -3,23 +3,24 @@ import commonjs from "@rollup/plugin-commonjs";
 import terser from "@rollup/plugin-terser";
 
 export default {
-    input: "src/ai-binder.js",
-    output: {
-        file: "dist/ai-binder.min.js",
-        format: "iife",
-        name: "AiBinder",
-        sourcemap: true,
-        banner: "/*! AiBinder v1.0.0 | MIT License */",
-        footer: "//# sourceMappingURL=ai-binder.min.js.map",
-    },
-    plugins: [
-        resolve(),
-        commonjs(),
-        terser({
-            format: {
-                comments: false,
-                preamble: "/*! AiBinder v1.0.0 | MIT License */",
-            },
-        }),
+    input: "src/index.js",
+    output: [
+        {
+            file: "dist/ai-binder.min.js",
+            format: "iife",
+            name: "AiBinder",
+            plugins: [terser()],
+        },
+        {
+            file: "dist/ai-binder.esm.js",
+            format: "esm",
+            plugins: [terser()],
+        },
+        {
+            file: "dist/ai-binder.cjs.js",
+            format: "cjs",
+            plugins: [terser()],
+        },
     ],
+    plugins: [resolve(), commonjs()],
 };

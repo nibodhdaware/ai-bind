@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { AiBinder } from "./ai-binder.js";
 
 // Mock function to generate content
 const mockGenerateContent = async (prompt) => {
@@ -194,5 +195,37 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// Export the AiBinder object
-window.AiBinder = AiBinder;
+// Export for npm usage
+export { AiBinder };
+
+// For CDN usage, attach to window if in browser
+if (typeof window !== "undefined") {
+    window.AiBinder = {
+        init: (apiKey, systemPrompt, model) => {
+            const binder = new AiBinder({
+                apiKey: apiKey || window.AiBinderConfig?.apiKey,
+                systemPrompt:
+                    systemPrompt || window.AiBinderConfig?.systemPrompt,
+                model: model || window.AiBinderConfig?.model,
+            });
+
+            // Process all elements with data-prompt attribute
+            const promptElements = document.querySelectorAll("[data-prompt]");
+            if (promptElements.length > 0) {
+                const defaultContext = {
+                    time: new Date().toLocaleTimeString(),
+                    date: new Date().toLocaleDateString(),
+                };
+
+                promptElements.forEach((element) => {
+                    if (!element.textContent) {
+                        element.textContent = "Loading...";
+                    }
+                    binder.bind(defaultContext).process(element);
+                });
+            }
+
+            return binder;
+        },
+    };
+}

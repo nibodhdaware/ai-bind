@@ -1,9 +1,17 @@
 {
     "name": "ai-bind",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "description": "A library for binding AI models to HTML elements",
     "type": "module",
     "main": "dist/ai-binder.min.js",
+    "module": "dist/ai-binder.esm.js",
+    "exports": {
+        ".": {
+            "import": "./dist/ai-binder.esm.js",
+            "require": "./dist/ai-binder.cjs.js",
+            "browser": "./dist/ai-binder.min.js"
+        }
+    },
     "scripts": {
         "build": "rollup -c",
         "build:watch": "rollup -c -w",
@@ -29,7 +37,9 @@
         "openai": "^4.28.0"
     },
     "files": [
-        "dist"
+        "dist",
+        "README.md",
+        "LICENSE"
     ],
     "browser": {
         "./dist/ai-binder.min.js": "./dist/ai-binder.min.js"
