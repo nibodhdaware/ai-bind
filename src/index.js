@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { AiBinder } from "./ai-binder.js";
+import { AiBinder as AiBinderClass } from "./ai-binder.js";
 
 // Mock function to generate content
 const mockGenerateContent = async (prompt) => {
@@ -196,13 +196,13 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // Export for npm usage
-export { AiBinder };
+export { AiBinderClass as AiBinder };
 
 // For CDN usage, attach to window if in browser
 if (typeof window !== "undefined") {
     window.AiBinder = {
         init: (apiKey, systemPrompt, model) => {
-            const binder = new AiBinder({
+            const binder = new AiBinderClass({
                 apiKey: apiKey || window.AiBinderConfig?.apiKey,
                 systemPrompt:
                     systemPrompt || window.AiBinderConfig?.systemPrompt,

@@ -2,7 +2,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
 
-class AiBinder {
+export class AiBinder {
     constructor(config) {
         this.apiKey = config.apiKey;
         this.systemPrompt = config.systemPrompt;
