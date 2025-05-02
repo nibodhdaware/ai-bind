@@ -1,231 +1,189 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { AiBinder as AiBinderClass } from "./ai-binder.js";
+import OpenAI from "openai";
+import Anthropic from "@anthropic-ai/sdk";
 
-// Mock function to generate content
-const mockGenerateContent = async (prompt) => {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 500));
+export class AiBinder {
+    constructor(config) {
+        this.apiKey = config.apiKey;
+        this.systemPrompt = config.systemPrompt;
+        this.model = config.model;
 
-    // Generate mock responses based on the prompt content
-    if (prompt.includes("welcome message")) {
-        return `Welcome ${
-            prompt.match(/for (.*?) who/)[1]
-        }! We're excited to have you as our ${
-            prompt.match(/is a (.*?)\./)[1]
-        }.`;
-    } else if (prompt.includes("description")) {
-        const product = prompt.match(/for (.*?) that/)[1];
-        const price = prompt.match(/costs \$(.*?) and/)[1];
-        const color = prompt.match(/in (.*?)\./)[1];
-        return `Check out our amazing ${color} ${product}, a premium choice at just $${price}. Perfect for those who demand excellence.`;
-    } else if (prompt.includes("time")) {
-        const time = prompt.match(/time is (.*?) and/)[1];
-        const weather = prompt.match(/is (.*?)\./)[1];
-        return `At ${time}, you'll be happy to know it's ${weather} outside. Perfect time to check our services!`;
+        // Detect provider based on model name and API key
+        this.provider = this.detectProvider();
+
+        // Initialize the appropriate client based on detected provider
+        switch (this.provider) {
+            case "gemini":
+                this.genAI = new GoogleGenerativeAI(this.apiKey);
+                this.modelInstance = this.genAI.getGenerativeModel({
+                    model: this.model,
+                });
+                break;
+            case "openai":
+                this.client = new OpenAI({
+                    apiKey: this.apiKey,
+                    defaultQuery: { "api-version": "2023-05-15" },
+                    defaultHeaders: { "api-key": this.apiKey },
+                });
+                break;
+            case "anthropic":
+                this.client = new Anthropic({
+                    apiKey: this.apiKey,
+                    defaultHeaders: { "anthropic-version": "2023-06-01" },
+                });
+                break;
+            default:
+                throw new Error(`Unsupported model: ${this.model}`);
+        }
     }
-    return `Generated response for: ${prompt}`;
-};
 
-const AiBinder = {
-    context: {},
-    model: null,
-    systemPrompt: null,
-
-    // Initialize with API key and system prompt
-    init: function (apiKey = null, systemPrompt = null) {
-        // Get API key from various sources
-        const resolvedApiKey =
-            apiKey ||
-            window.AiBinderConfig?.apiKey ||
-            document.body.getAttribute("data-ai-binder-api-key");
-
-        if (!resolvedApiKey) {
-            console.error("API key is required");
-            this._showConfigUI();
-            return this;
+    detectProvider() {
+        // Check model name patterns
+        if (this.model.startsWith("gemini")) {
+            return "gemini";
+        } else if (this.model.startsWith("gpt")) {
+            return "openai";
+        } else if (this.model.startsWith("claude")) {
+            return "anthropic";
         }
 
-        try {
-            const genAI = new GoogleGenerativeAI(resolvedApiKey);
-            this.model = genAI.getGenerativeModel({
-                model: "gemini-2.0-flash",
-            });
-
-            // Get system prompt from various sources
-            this.systemPrompt =
-                systemPrompt ||
-                window.AiBinderConfig?.systemPrompt ||
-                document.body.getAttribute("data-ai-binder-prompt");
-
-            console.log(
-                "AiBinder initialized with Gemini API (gemini-2.0-flash)",
-            );
-            if (this.systemPrompt) {
-                console.log("Using system prompt:", this.systemPrompt);
-            }
-        } catch (error) {
-            console.error("Error initializing Gemini API:", error);
-        }
-        return this;
-    },
-
-    // Show configuration UI if needed
-    _showConfigUI: function () {
-        const configHtml = `
-            <div id="ai-binder-config" style="
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                background: #f5f5f5;
-                padding: 20px;
-                z-index: 1000;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            ">
-                <h2 style="margin-top: 0;">AiBinder Configuration Required</h2>
-                <div style="margin-bottom: 10px;">
-                    <label for="ai-binder-api-key">Gemini API Key:</label>
-                    <input type="password" id="ai-binder-api-key" style="width: 100%; padding: 8px; margin-top: 5px;" />
-                </div>
-                <div style="margin-bottom: 10px;">
-                    <label for="ai-binder-system-prompt">System Prompt (Optional):</label>
-                    <textarea id="ai-binder-system-prompt" style="width: 100%; padding: 8px; margin-top: 5px; height: 100px;"></textarea>
-                    <div style="font-size: 0.9em; color: #666; margin-top: 5px;">
-                        Example: "You are a casual and friendly assistant. Always respond in a single sentence. Use emojis when appropriate. Keep it light and fun!"
-                    </div>
-                </div>
-                <button onclick="window.AiBinder._initializeFromUI()" style="
-                    padding: 8px 16px;
-                    background: #4CAF50;
-                    color: white;
-                    border: none;
-                    border-radius: 4px;
-                    cursor: pointer;
-                ">Initialize AiBinder</button>
-            </div>
-        `;
-
-        document.body.insertAdjacentHTML("afterbegin", configHtml);
-    },
-
-    // Initialize from UI
-    _initializeFromUI: function () {
-        const apiKey = document.getElementById("ai-binder-api-key").value;
-        const systemPrompt = document.getElementById(
-            "ai-binder-system-prompt",
-        ).value;
-
-        if (!apiKey) {
-            alert("Please enter your Gemini API key");
-            return;
+        // If model name doesn't match, try API key format
+        if (this.apiKey.startsWith("sk-")) {
+            return "openai";
+        } else if (this.apiKey.startsWith("sk-ant-")) {
+            return "anthropic";
+        } else if (this.apiKey.startsWith("AIza")) {
+            return "gemini";
         }
 
-        try {
-            this.init(apiKey, systemPrompt).bind(this.context).process();
-
-            // Remove config UI
-            document.getElementById("ai-binder-config").remove();
-        } catch (error) {
-            console.error("Error initializing AiBinder:", error);
-            alert("Error initializing AiBinder. Please check your API key.");
-        }
-    },
-
-    // Set system prompt
-    setSystemPrompt: function (prompt) {
-        this.systemPrompt = prompt;
-        return this;
-    },
-
-    // Bind context data to be used in prompts
-    bind: function (data) {
-        this.context = { ...this.context, ...data };
-        return this;
-    },
-
-    // Process all elements with data-prompt attribute
-    process: async function () {
-        if (!this.model) {
-            console.error(
-                "AiBinder not initialized. Call AiBinder.init() first.",
-            );
-            return;
-        }
-
-        const elements = document.querySelectorAll("[data-prompt]");
-
-        for (const element of elements) {
-            try {
-                element.textContent = "Generating...";
-                const prompt = element.getAttribute("data-prompt");
-                const processedPrompt = this._replacePlaceholders(prompt);
-
-                // Combine system prompt with user prompt if available
-                const fullPrompt = this.systemPrompt
-                    ? `${this.systemPrompt}\n\nUser: ${processedPrompt}`
-                    : processedPrompt;
-
-                const result = await this.model.generateContent(fullPrompt);
-                const response = await result.response;
-                element.textContent = response.text();
-            } catch (error) {
-                console.error("Error generating content:", error);
-                element.textContent =
-                    "Error generating content. Please try again.";
-            }
-        }
-    },
-
-    // Replace placeholders in the prompt with context values
-    _replacePlaceholders: function (prompt) {
-        return prompt.replace(/\{([^}]+)\}/g, (match, key) => {
-            return this.context[key] || match;
-        });
-    },
-};
-
-// Auto-process elements when the DOM is ready
-document.addEventListener("DOMContentLoaded", () => {
-    if (window.AiBinderConfig && window.AiBinderConfig.apiKey) {
-        AiBinder.init(window.AiBinderConfig.apiKey).process();
-    } else {
-        console.error(
-            "AiBinder API key not configured. Set window.AiBinderConfig.apiKey before loading the script.",
+        throw new Error(
+            `Could not determine provider for model: ${this.model}`,
         );
     }
-});
 
-// Export for npm usage
-export { AiBinderClass as AiBinder };
+    bind(context) {
+        this.context = context;
+        return this;
+    }
 
-// For CDN usage, attach to window if in browser
-if (typeof window !== "undefined") {
-    window.AiBinder = {
-        init: (apiKey, systemPrompt, model) => {
-            const binder = new AiBinderClass({
-                apiKey: apiKey || window.AiBinderConfig?.apiKey,
-                systemPrompt:
-                    systemPrompt || window.AiBinderConfig?.systemPrompt,
-                model: model || window.AiBinderConfig?.model,
-            });
-
-            // Process all elements with data-prompt attribute
-            const promptElements = document.querySelectorAll("[data-prompt]");
-            if (promptElements.length > 0) {
-                const defaultContext = {
-                    time: new Date().toLocaleTimeString(),
-                    date: new Date().toLocaleDateString(),
-                };
-
-                promptElements.forEach((element) => {
-                    if (!element.textContent) {
-                        element.textContent = "Loading...";
-                    }
-                    binder.bind(defaultContext).process(element);
-                });
+    async process(element) {
+        try {
+            const prompt = element.getAttribute("data-prompt");
+            if (!prompt) {
+                throw new Error("No prompt found on element");
             }
 
-            return binder;
-        },
-    };
+            // Replace placeholders in the prompt with context values
+            let processedPrompt = prompt;
+            for (const [key, value] of Object.entries(this.context)) {
+                processedPrompt = processedPrompt.replace(
+                    new RegExp(`{${key}}`, "g"),
+                    value,
+                );
+            }
+
+            let text;
+            // Generate content based on provider and model
+            switch (this.provider) {
+                case "gemini":
+                    const result = await this.modelInstance.generateContent(
+                        this.systemPrompt
+                            ? `System Prompt: ${this.systemPrompt}\n\n${processedPrompt}`
+                            : processedPrompt,
+                    );
+                    const response = await result.response;
+                    text = response.text();
+                    break;
+                case "openai":
+                    const completion =
+                        await this.client.chat.completions.create({
+                            model: this.model,
+                            messages: [
+                                ...(this.systemPrompt
+                                    ? [
+                                          {
+                                              role: "system",
+                                              content: this.systemPrompt,
+                                          },
+                                      ]
+                                    : []),
+                                { role: "user", content: processedPrompt },
+                            ],
+                            temperature: 0.7,
+                            max_tokens: 1000,
+                        });
+                    text = completion.choices[0].message.content;
+                    break;
+                case "anthropic":
+                    const message = await this.client.messages.create({
+                        model: this.model,
+                        max_tokens: 1000,
+                        temperature: 0.7,
+                        messages: [
+                            {
+                                role: "user",
+                                content: this.systemPrompt
+                                    ? `${this.systemPrompt}\n\n${processedPrompt}`
+                                    : processedPrompt,
+                            },
+                        ],
+                    });
+                    text = message.content[0].text;
+                    break;
+            }
+
+            // Update the element with the generated content
+            element.textContent = text;
+        } catch (error) {
+            console.error("Error generating content:", error);
+            element.textContent = "Error: " + error.message;
+            throw error;
+        }
+    }
 }
+
+// Initialize AiBinder
+export function init(apiKey, systemPrompt, model) {
+    // Get configuration from various sources
+    const config = {
+        apiKey:
+            apiKey ||
+            document.body.getAttribute("data-ai-binder-api-key") ||
+            window.AiBinderConfig?.apiKey,
+        systemPrompt:
+            systemPrompt ||
+            document.body.getAttribute("data-ai-binder-prompt") ||
+            window.AiBinderConfig?.systemPrompt,
+        model:
+            model ||
+            document.body.getAttribute("data-ai-binder-model") ||
+            window.AiBinderConfig?.model,
+    };
+
+    // If model is missing, show error in console
+    if (!config.model) {
+        console.error(
+            `%cModel is required for AiBinder. You can add it in one of these ways:
+
+1. Add it to the body tag:
+   <body data-ai-binder-model="gemini-2.0-flash">
+
+2. Set it in the global config:
+   window.AiBinderConfig = { model: "gemini-2.0-flash" };
+
+3. Pass it to the init function:
+   AiBinder.init("your-api-key", "your-prompt", "gemini-2.0-flash");
+
+Please add a model and refresh the page.`,
+            "color: #ff6b6b; font-weight: bold;",
+        );
+        return null;
+    }
+
+    console.log("Initializing AiBinder with config:", config);
+
+    return new AiBinder(config);
+}
+
+// Export the init function
+window.AiBinder = { init };
