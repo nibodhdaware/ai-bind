@@ -10,9 +10,7 @@ A lightweight JavaScript library that makes it easy to bind AI models to HTML el
 -   🎯 Context-aware prompts
 -   ⚡ Lightweight and fast
 
-## AIBind Example CodePen
-
-[![Edit ai-bind](https://codepen.io/nibodh11228844/pen/GggQzmPk)
+[AIBind CodePen Example](https://codepen.io/nibodh11228844/pen/GggQzmP)
 
 ## Installation
 
