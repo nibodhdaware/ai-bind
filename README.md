@@ -28,17 +28,27 @@ npm install ai-bind
 
 ## Usage
 
-### CDN Usage
+### CDN Usage (Secure Method)
+
+**Step 1:** Copy `config.example.js` to `config.js` and add your API key:
+
+```javascript
+// config.js (DO NOT commit this file!)
+window.AiBinderConfig = {
+    apiKey: "your-actual-api-key-here", // Required
+    model: "gemini-2.0-flash", // Optional: model name based on provider
+    systemPrompt: "You are a helpful assistant.", // Optional: system prompt
+};
+```
+
+**Step 2:** Include both files in your HTML:
 
 ```html
-<script>
-    window.AiBinderConfig = {
-        apiKey: "YOUR_API_KEY", // Required
-        provider: "gemini", // Optional: "gemini" (default), "openai", "anthropic"
-        model: "gemini-2.0-flash", // Optional: model name based on provider
-        systemPrompt: "You are a helpful assistant.", // Optional: system prompt
-    };
-</script>
+<!-- Load your config first -->
+<script src="config.js"></script>
+<!-- Then load the AI-Bind library -->
+<script src="https://cdn.jsdelivr.net/gh/nibodhdaware/ai-bind@v1.0.8/dist/ai-binder.min.js"></script>
+```
 
 <p data-prompt="Generate a welcome message for {name} who is a {role}.">
     Loading...
@@ -253,6 +263,16 @@ Here's a complete example showing all features:
 -   Provider: "anthropic"
 -   Models: "claude-3-opus", "claude-3-sonnet"
 -   API Key: Anthropic API key
+
+## Security Best Practices
+
+⚠️ **IMPORTANT**: Never commit API keys to version control!
+
+1. **Use config.js**: Store API keys in a separate `config.js` file that's excluded from version control
+2. **Environment Variables**: For server-side usage, use environment variables
+3. **Input Validation**: The library automatically validates and sanitizes inputs
+4. **Rate Limiting**: Implement rate limiting for production applications
+5. **HTTPS Only**: Always use HTTPS in production
 
 ## Best Practices
 
