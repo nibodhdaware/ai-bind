@@ -1,6 +1,5 @@
 const path = require("path");
 const TerserPlugin = require("terser-webpack-plugin");
-const CopyPlugin = require("copy-webpack-plugin");
 
 module.exports = {
     entry: "./src/ai-binder.js",
@@ -15,9 +14,5 @@ module.exports = {
         minimize: true,
         minimizer: [new TerserPlugin()],
     },
-    plugins: [
-        new CopyPlugin({
-            patterns: [{ from: "index.html", to: "index.html" }],
-        }),
-    ],
+    plugins: [],
 };

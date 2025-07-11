@@ -4,6 +4,12 @@ package-lock.json
 
 # Environment variables
 .env
+.env.*
+
+# Configuration files with sensitive data
+config.js
+*.config.js
+!config.example.js
 
 # IDE and editor files
 .DS_Store
@@ -11,3 +17,14 @@ package-lock.json
 # Test files
 index.html
 minimal.html
+
+# Security files
+*.key
+*.pem
+*.p12
+*.pfx
+secrets/
+
+# Logs
+logs/
+*.log

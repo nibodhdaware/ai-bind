@@ -1,6 +1,6 @@
 {
     "name": "ai-bind",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "description": "A library for binding AI models to HTML elements",
     "type": "module",
     "main": "dist/ai-binder.min.js",
@@ -23,7 +23,7 @@
         "content",
         "generation"
     ],
-    "author": "",
+    "author": "nibodhdaware",
     "license": "MIT",
     "devDependencies": {
         "@babel/core": "^7.24.0",

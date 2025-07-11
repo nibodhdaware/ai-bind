@@ -4,6 +4,24 @@ import Anthropic from "@anthropic-ai/sdk";
 
 export class AiBinder {
     constructor(config) {
+        // Validate required configuration
+        if (!config || typeof config !== 'object') {
+            throw new Error('Configuration object is required');
+        }
+        
+        if (!config.apiKey || typeof config.apiKey !== 'string') {
+            throw new Error('API key is required and must be a string');
+        }
+        
+        if (!config.model || typeof config.model !== 'string') {
+            throw new Error('Model is required and must be a string');
+        }
+        
+        // Validate API key format (basic check)
+        if (config.apiKey.length < 10) {
+            throw new Error('API key appears to be invalid (too short)');
+        }
+        
         this.apiKey = config.apiKey;
         this.systemPrompt = config.systemPrompt;
         this.model = config.model;
@@ -72,14 +90,31 @@ export class AiBinder {
             if (!prompt) {
                 throw new Error("No prompt found on element");
             }
+            
+            // Validate prompt length
+            if (prompt.length > 5000) {
+                throw new Error("Prompt is too long (max 5000 characters)");
+            }
+            
+            // Validate context exists
+            if (!this.context || typeof this.context !== 'object') {
+                throw new Error("Context must be bound before processing");
+            }
 
             // Replace placeholders in the prompt with context values
             let processedPrompt = prompt;
             for (const [key, value] of Object.entries(this.context)) {
+                // Sanitize context values to prevent injection
+                const sanitizedValue = String(value).replace(/[<>"'&]/g, '');
                 processedPrompt = processedPrompt.replace(
                     new RegExp(`{${key}}`, "g"),
-                    value,
+                    sanitizedValue,
                 );
+            }
+            
+            // Final validation of processed prompt
+            if (processedPrompt.length > 10000) {
+                throw new Error("Processed prompt is too long (max 10000 characters)");
             }
 
             let text;
@@ -144,21 +179,58 @@ export class AiBinder {
 
 // Initialize AiBinder
 export function init(apiKey, systemPrompt, model) {
-    // Get configuration from various sources
+    // Security check: warn if API key is being passed directly
+    if (apiKey && typeof apiKey === 'string' && apiKey.length > 10) {
+        console.warn('⚠️  AI-Bind Security Warning: API key passed directly to init(). Consider using config.js instead.');
+    }
+    
+    // Get configuration from various sources (prioritizing secure methods)
     const config = {
         apiKey:
             apiKey ||
-            document.body.getAttribute("data-ai-binder-api-key") ||
-            window.AiBinderConfig?.apiKey,
+            window.AiBinderConfig?.apiKey ||
+            document.body.getAttribute("data-ai-binder-api-key"),
         systemPrompt:
             systemPrompt ||
-            document.body.getAttribute("data-ai-binder-prompt") ||
-            window.AiBinderConfig?.systemPrompt,
+            window.AiBinderConfig?.systemPrompt ||
+            document.body.getAttribute("data-ai-binder-prompt"),
         model:
             model ||
-            document.body.getAttribute("data-ai-binder-model") ||
-            window.AiBinderConfig?.model,
+            window.AiBinderConfig?.model ||
+            document.body.getAttribute("data-ai-binder-model"),
+        // Additional security settings from config
+        maxTokens: window.AiBinderConfig?.maxTokens || 1000,
+        temperature: window.AiBinderConfig?.temperature || 0.7,
+        enableSanitization: window.AiBinderConfig?.enableSanitization !== false,
+        maxPromptLength: window.AiBinderConfig?.maxPromptLength || 5000,
+        maxProcessedPromptLength: window.AiBinderConfig?.maxProcessedPromptLength || 10000,
     };
+    
+    // Security validation
+    if (!config.apiKey) {
+        console.error(
+            `%cAI-Bind Error: No API key found. Please configure using config.js:
+
+1. Copy config.example.js to config.js
+2. Add your API key to config.js
+3. Include config.js before the AI-Bind library:
+   <script src="config.js"></script>
+   <script src="ai-bind.min.js"></script>
+
+Never commit config.js to version control!`,
+            "color: #ff6b6b; font-weight: bold;"
+        );
+        return null;
+    }
+    
+    // Validate API key format
+    if (config.apiKey === 'YOUR_API_KEY_HERE' || config.apiKey.includes('YOUR_API_KEY')) {
+        console.error(
+            `%cAI-Bind Error: Please replace 'YOUR_API_KEY_HERE' with your actual API key in config.js`,
+            "color: #ff6b6b; font-weight: bold;"
+        );
+        return null;
+    }
 
     // If model is missing, show error in console
     if (!config.model) {
